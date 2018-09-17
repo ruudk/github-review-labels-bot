@@ -4,3 +4,4 @@
 /.sls-simulate-registry
 /bin
 /vendor
+/node_modules
