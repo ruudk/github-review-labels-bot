@@ -9,6 +9,10 @@ import (
 )
 
 const ApprovedReviewsBeforeReadyToMerge = 2
+const LabelWorkInProgress = "work in progress"
+const LabelReadyForReview = "ready for review"
+const LabelFirstApproval = "first approval"
+const LabelReadyToMerge = "ready to merge"
 
 type GithubApp struct {
 	client        *github.Client
@@ -94,10 +98,10 @@ func (s *GithubApp) handlePullRequestCreated(event *github.PullRequestEvent) err
 	//		*event.Repo.Owner.Login,
 	//		*event.Repo.Name,
 	//		*event.PullRequest.Number,
-	//		[]string{"work in progress"},
+	//		[]string{LabelWorkInProgress},
 	//	)
 	//	if err != nil {
-	//		fmt.Printf("Could not add label %s to PR %s\n", "work in progress", *event.PullRequest.URL)
+	//		fmt.Printf("Could not add label %s to PR %s\n", LabelWorkInProgress, *event.PullRequest.URL)
 	//		return err
 	//	}
 	//}
@@ -131,10 +135,10 @@ func (s *GithubApp) applyPullRequestLabels(installationId int, org, repo string,
 			org,
 			repo,
 			number,
-			[]string{"first approval"},
+			[]string{LabelFirstApproval},
 		)
 		if err != nil {
-			fmt.Printf("Could not add label %s to PR %s\n", "first approval", url)
+			fmt.Printf("Could not add label %s to PR %s\n", LabelFirstApproval, url)
 			return err
 		}
 
@@ -143,10 +147,10 @@ func (s *GithubApp) applyPullRequestLabels(installationId int, org, repo string,
 			org,
 			repo,
 			number,
-			"ready to merge",
+			LabelReadyToMerge,
 		)
 		if err != nil {
-			fmt.Printf("Could not remove label %s to PR %s, it probably doesn't exist\n", "ready to merge", url)
+			fmt.Printf("Could not remove label %s to PR %s, it probably doesn't exist\n", LabelReadyToMerge, url)
 		}
 	} else if approvedReviews >= ApprovedReviewsBeforeReadyToMerge {
 		_, _, err = ghi.Issues.AddLabelsToIssue(
@@ -154,10 +158,10 @@ func (s *GithubApp) applyPullRequestLabels(installationId int, org, repo string,
 			org,
 			repo,
 			number,
-			[]string{"ready to merge"},
+			[]string{LabelReadyToMerge},
 		)
 		if err != nil {
-			fmt.Printf("Could not add label %s to PR %s\n", "ready to merge", url)
+			fmt.Printf("Could not add label %s to PR %s\n", LabelReadyToMerge, url)
 			return err
 		}
 
@@ -166,10 +170,10 @@ func (s *GithubApp) applyPullRequestLabels(installationId int, org, repo string,
 			org,
 			repo,
 			number,
-			"ready for review",
+			LabelReadyForReview,
 		)
 		if err != nil {
-			fmt.Printf("Could not remove label %s to PR %s, it probably doesn't exist\n", "ready for review", url)
+			fmt.Printf("Could not remove label %s to PR %s, it probably doesn't exist\n", LabelReadyForReview, url)
 		}
 
 		_, err = ghi.Issues.RemoveLabelForIssue(
@@ -177,10 +181,10 @@ func (s *GithubApp) applyPullRequestLabels(installationId int, org, repo string,
 			org,
 			repo,
 			number,
-			"first approval",
+			LabelFirstApproval,
 		)
 		if err != nil {
-			fmt.Printf("Could not remove label %s to PR %s, it probably doesn't exist\n", "first approval", url)
+			fmt.Printf("Could not remove label %s to PR %s, it probably doesn't exist\n", LabelFirstApproval, url)
 		}
 	} else {
 		_, err = ghi.Issues.RemoveLabelForIssue(
@@ -188,10 +192,10 @@ func (s *GithubApp) applyPullRequestLabels(installationId int, org, repo string,
 			org,
 			repo,
 			number,
-			"ready to merge",
+			LabelReadyToMerge,
 		)
 		if err != nil {
-			fmt.Printf("Could not remove label %s to PR %s, it probably doesn't exist\n", "ready to merge", url)
+			fmt.Printf("Could not remove label %s to PR %s, it probably doesn't exist\n", LabelReadyToMerge, url)
 		}
 
 		_, err = ghi.Issues.RemoveLabelForIssue(
@@ -199,10 +203,10 @@ func (s *GithubApp) applyPullRequestLabels(installationId int, org, repo string,
 			org,
 			repo,
 			number,
-			"first approval",
+			LabelFirstApproval,
 		)
 		if err != nil {
-			fmt.Printf("Could not remove label %s to PR %s, it probably doesn't exist\n", "first approval", url)
+			fmt.Printf("Could not remove label %s to PR %s, it probably doesn't exist\n", LabelFirstApproval, url)
 		}
 	}
 
@@ -247,10 +251,10 @@ func (s *GithubApp) createLabels(installationId int, owner, repo string) error {
 	}
 
 	labelTemplate := map[string]string{
-		"work in progress": "0052cc",
-		"first approval":   "bfe5bf",
-		"ready for review": "fef2c0",
-		"ready to merge":   "0e8a16",
+		LabelWorkInProgress: "0052cc",
+		LabelFirstApproval:   "bfe5bf",
+		LabelReadyForReview: "fef2c0",
+		LabelReadyToMerge:   "0e8a16",
 	}
 	for labelName, labelColor := range labelTemplate {
 		label := labelsMap[labelName]
