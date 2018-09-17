@@ -109,7 +109,7 @@ func (s *GithubApp) handlePullRequestCreated(event *github.PullRequestEvent) err
 	return nil
 }
 
-func (s *GithubApp) applyPullRequestLabels(installationId int, org, repo string, number int, url string) error {
+func (s *GithubApp) handlePullRequestReviewed(installationId int, org, repo string, number int, url string) error {
 	ghi, err := s.getClientForInstallation(installationId)
 	if err != nil {
 		return err
@@ -120,28 +120,18 @@ func (s *GithubApp) applyPullRequestLabels(installationId int, org, repo string,
 		return err
 	}
 
-	approvedReviews := 0
+	approvedReviews := 1
+	fmt.Printf("Approved reviews: %d\n", approvedReviews)
 	for _, l := range pr.Labels {
 		if *l.Name == LabelFirstApproval {
+			fmt.Printf("PR has label %s, so +1\n", LabelFirstApproval)
 			approvedReviews++
 		} else if *l.Name == LabelReadyToMerge {
-			approvedReviews += 2
-		}
-	}
-
-	reviews, _, err := ghi.PullRequests.ListReviews(context.Background(), org, repo, number, &github.ListOptions{})
-	if err != nil {
-		return err
-	}
-
-	approvedByUser := make(map[int64]bool)
-	for _, r := range reviews {
-		if *r.State == "APPROVED" && !approvedByUser[*r.User.ID] {
+			fmt.Printf("PR has label %s, so +2\n", LabelFirstApproval)
 			approvedReviews++
-
-			approvedByUser[*r.User.ID] = true
 		}
 	}
+	fmt.Printf("Approved reviews: %d\n", approvedReviews)
 
 	fmt.Printf("PR %d received %d reviews\n", number, approvedReviews)
 
@@ -332,24 +322,26 @@ func (s *GithubApp) HandlerFunc(w http.ResponseWriter, r *http.Request) {
 			go s.setupLabelsForAllRepositories(event)
 		}
 	case *github.PullRequestReviewEvent:
-		s.applyPullRequestLabels(
-			int(*event.Installation.ID),
-			*event.Organization.Login,
-			*event.Repo.Name,
-			*event.PullRequest.Number,
-			*event.PullRequest.URL,
-		)
-	case *github.PullRequestEvent:
-		if *event.Action == "opened" {
-			s.handlePullRequestCreated(event)
-		} else if *event.Action == "labeled" {
-			s.applyPullRequestLabels(
+		if *event.Review.State == "approved" {
+			s.handlePullRequestReviewed(
 				int(*event.Installation.ID),
-				*event.Repo.Owner.Login,
+				*event.Organization.Login,
 				*event.Repo.Name,
 				*event.PullRequest.Number,
 				*event.PullRequest.URL,
 			)
+		}
+	case *github.PullRequestEvent:
+		if *event.Action == "opened" {
+			s.handlePullRequestCreated(event)
+		} else if *event.Action == "labeled" {
+			//s.applyPullRequestLabels(
+			//	int(*event.Installation.ID),
+			//	*event.Repo.Owner.Login,
+			//	*event.Repo.Name,
+			//	*event.PullRequest.Number,
+			//	*event.PullRequest.URL,
+			//)
 		}
 	case *github.RepositoryEvent:
 		if *event.Action == "created" {
