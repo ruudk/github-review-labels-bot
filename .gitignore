@@ -1,0 +1,6 @@
+.envrc
+*.pem
+/.serverless
+/.sls-simulate-registry
+/bin
+/vendor

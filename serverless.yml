@@ -1,0 +1,31 @@
+service:
+  name: github-reviews-label-bot
+
+provider:
+  name: aws
+  runtime: go1.x
+  stage: dev
+  region: eu-west-1
+  memorySize: 128
+  environment:
+    GITHUB_INTEGRATION_ID: ${env:GITHUB_INTEGRATION_ID}
+    GITHUB_PRIVATE_KEY: ${env:GITHUB_PRIVATE_KEY}
+    GITHUB_WEBHOOK_SECRET: ${env:GITHUB_WEBHOOK_SECRET}
+
+package:
+  exclude:
+  - ./**
+  include:
+  - ./bin/**
+
+functions:
+  handler:
+    handler: bin/handler
+    events:
+    - http:
+        path: webhook
+        method: post
+
+plugins:
+- serverless-pseudo-parameters
+- serverless-plugin-simulate
