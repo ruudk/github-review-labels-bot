@@ -115,15 +115,31 @@ func (s *GithubApp) applyPullRequestLabels(installationId int, org, repo string,
 		return err
 	}
 
-	reviews, _, err := ghi.PullRequests.ListReviews(context.Background(), org, repo, number, &github.ListOptions{})
+	pr, _, err := ghi.PullRequests.Get(context.Background(), org, repo, number)
 	if err != nil {
 		return err
 	}
 
 	approvedReviews := 0
-	for _, r := range reviews {
-		if *r.State == "APPROVED" {
+	for _, l := range pr.Labels {
+		if *l.Name == LabelFirstApproval {
 			approvedReviews++
+		} else if *l.Name == LabelReadyToMerge {
+			approvedReviews += 2
+		}
+	}
+
+	reviews, _, err := ghi.PullRequests.ListReviews(context.Background(), org, repo, number, &github.ListOptions{})
+	if err != nil {
+		return err
+	}
+
+	approvedByUser := make(map[int64]bool)
+	for _, r := range reviews {
+		if *r.State == "APPROVED" && !approvedByUser[*r.User.ID] {
+			approvedReviews++
+
+			approvedByUser[*r.User.ID] = true
 		}
 	}
 
