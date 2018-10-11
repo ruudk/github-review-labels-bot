@@ -322,7 +322,7 @@ func (s *GithubApp) HandlerFunc(w http.ResponseWriter, r *http.Request) {
 			go s.setupLabelsForAllRepositories(event)
 		}
 	case *github.PullRequestReviewEvent:
-		if *event.Review.State == "approved" {
+		if *event.Review.State == "approved" && *event.Action == "submitted" {
 			s.handlePullRequestReviewed(
 				int(*event.Installation.ID),
 				*event.Organization.Login,
