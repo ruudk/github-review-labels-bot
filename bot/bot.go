@@ -87,24 +87,24 @@ func (s *GithubApp) setupLabelsForAllRepositories(event *github.InstallationEven
 }
 
 func (s *GithubApp) handlePullRequestCreated(event *github.PullRequestEvent) error {
-	//ghi, err := s.getClientForInstallation(int(*event.Installation.ID))
-	//if err != nil {
-	//	return err
-	//}
+	ghi, err := s.getClientForInstallation(int(*event.Installation.ID))
+	if err != nil {
+		return err
+	}
 
-	//if len(event.PullRequest.Labels) == 0 {
-	//	_, _, err = ghi.Issues.AddLabelsToIssue(
-	//		context.Background(),
-	//		*event.Repo.Owner.Login,
-	//		*event.Repo.Name,
-	//		*event.PullRequest.Number,
-	//		[]string{LabelWorkInProgress},
-	//	)
-	//	if err != nil {
-	//		fmt.Printf("Could not add label %s to PR %s\n", LabelWorkInProgress, *event.PullRequest.URL)
-	//		return err
-	//	}
-	//}
+	if len(event.PullRequest.Labels) == 0 && *event.PullRequest.Draft {
+		_, _, err = ghi.Issues.AddLabelsToIssue(
+			context.Background(),
+			*event.Repo.Owner.Login,
+			*event.Repo.Name,
+			*event.PullRequest.Number,
+			[]string{LabelWorkInProgress},
+		)
+		if err != nil {
+			fmt.Printf("Could not add label %s to PR %s\n", LabelWorkInProgress, *event.PullRequest.URL)
+			return err
+		}
+	}
 
 	return nil
 }

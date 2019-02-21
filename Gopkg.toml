@@ -35,7 +35,7 @@
 
 [[constraint]]
   name = "github.com/google/go-github"
-  version = "18.1.0"
+  revision = "00add49aab2728f7c246b27be612b002b22e7f94"
 
 [[constraint]]
   branch = "master"
