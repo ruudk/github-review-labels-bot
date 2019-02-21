@@ -92,16 +92,22 @@ func (s *GithubApp) handlePullRequestCreated(event *github.PullRequestEvent) err
 		return err
 	}
 
-	if len(event.PullRequest.Labels) == 0 && *event.PullRequest.Draft {
+	if len(event.PullRequest.Labels) == 0 {
+		var label string
+		if *event.PullRequest.Draft {
+			label = LabelWorkInProgress
+		} else {
+			label = LabelReadyForReview
+		}
 		_, _, err = ghi.Issues.AddLabelsToIssue(
 			context.Background(),
 			*event.Repo.Owner.Login,
 			*event.Repo.Name,
 			*event.PullRequest.Number,
-			[]string{LabelWorkInProgress},
+			[]string{label},
 		)
 		if err != nil {
-			fmt.Printf("Could not add label %s to PR %s\n", LabelWorkInProgress, *event.PullRequest.URL)
+			fmt.Printf("Could not add label %s to PR %s\n", label, *event.PullRequest.URL)
 			return err
 		}
 	}
