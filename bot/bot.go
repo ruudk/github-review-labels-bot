@@ -115,6 +115,38 @@ func (s *GithubApp) handlePullRequestCreated(event *github.PullRequestEvent) err
 	return nil
 }
 
+func (s *GithubApp) handlePullRequestReadyForReview(event *github.PullRequestEvent) error {
+	ghi, err := s.getClientForInstallation(int(*event.Installation.ID))
+	if err != nil {
+		return err
+	}
+
+	_, _, err = ghi.Issues.AddLabelsToIssue(
+		context.Background(),
+		*event.Repo.Owner.Login,
+		*event.Repo.Name,
+		*event.PullRequest.Number,
+		[]string{LabelReadyForReview},
+	)
+	if err != nil {
+		fmt.Printf("Could not add label %s to PR %s\n", LabelReadyForReview, *event.PullRequest.URL)
+		return err
+	}
+
+	_, err = ghi.Issues.RemoveLabelForIssue(
+		context.Background(),
+		*event.Repo.Owner.Login,
+		*event.Repo.Name,
+		*event.PullRequest.Number,
+		LabelWorkInProgress,
+	)
+	if err != nil {
+		fmt.Printf("Could not remove label %s to PR %s, it probably doesn't exist\n", LabelWorkInProgress, *event.PullRequest.URL)
+	}
+
+	return nil
+}
+
 func (s *GithubApp) handlePullRequestReviewed(installationId int, org, repo string, number int, url string) error {
 	ghi, err := s.getClientForInstallation(installationId)
 	if err != nil {
@@ -340,6 +372,8 @@ func (s *GithubApp) HandlerFunc(w http.ResponseWriter, r *http.Request) {
 	case *github.PullRequestEvent:
 		if *event.Action == "opened" {
 			s.handlePullRequestCreated(event)
+		} else if *event.Action == "ready_for_review" {
+			s.handlePullRequestReadyForReview(event)
 		} else if *event.Action == "labeled" {
 			//s.applyPullRequestLabels(
 			//	int(*event.Installation.ID),
