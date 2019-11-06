@@ -396,5 +396,6 @@ func (s *GithubApp) HandlerFunc(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("Skipping event %+v\n", event)
 	}
 
+	w.Write([]byte("Received"))
 	w.WriteHeader(http.StatusOK)
 }
