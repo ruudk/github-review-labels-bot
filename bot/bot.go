@@ -153,23 +153,20 @@ func (s *GithubApp) handlePullRequestReviewed(installationId int, org, repo stri
 		return err
 	}
 
-	pr, _, err := ghi.PullRequests.Get(context.Background(), org, repo, number)
+	reviews, _, err := ghi.PullRequests.ListReviews(context.Background(), org, repo, number, &github.ListOptions{})
 	if err != nil {
 		return err
 	}
 
-	approvedReviews := 1
-	fmt.Printf("Approved reviews: %d\n", approvedReviews)
-	for _, l := range pr.Labels {
-		if *l.Name == LabelFirstApproval {
-			fmt.Printf("PR has label %s, so +1\n", LabelFirstApproval)
+	approvedByUser := make(map[int64]bool)
+	approvedReviews := 0
+	for _, r := range reviews {
+		if *r.State == "APPROVED" && !approvedByUser[*r.User.ID] {
 			approvedReviews++
-		} else if *l.Name == LabelReadyToMerge {
-			fmt.Printf("PR has label %s, so +2\n", LabelFirstApproval)
-			approvedReviews++
+
+			approvedByUser[*r.User.ID] = true
 		}
 	}
-	fmt.Printf("Approved reviews: %d\n", approvedReviews)
 
 	fmt.Printf("PR %d received %d reviews\n", number, approvedReviews)
 
