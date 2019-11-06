@@ -5,8 +5,5 @@ build:
 	rm -f bin/*
 	env GOOS=linux go build -ldflags="-s -w" -o bin/handler main.go
 
-deploy-dev: build
-	sls deploy --stage=dev
-
-deploy-prod:
+deploy:
 	sls deploy --stage=prod
