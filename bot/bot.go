@@ -3,7 +3,7 @@ package bot
 import (
 	"fmt"
 	"github.com/bradleyfalzon/ghinstallation"
-	"github.com/google/go-github/v28/github"
+	"github.com/google/go-github/v32/github"
 	"golang.org/x/net/context"
 	"net/http"
 )
