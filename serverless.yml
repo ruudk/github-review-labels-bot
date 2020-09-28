@@ -6,6 +6,7 @@ provider:
   runtime: go1.x
   stage: dev
   region: eu-west-1
+  profile: ticketswap-production
   memorySize: 128
   environment:
     GITHUB_INTEGRATION_ID: ${env:GITHUB_INTEGRATION_ID}
