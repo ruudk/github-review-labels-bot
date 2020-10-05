@@ -9,7 +9,7 @@ provider:
   profile: ticketswap-production
   memorySize: 128
   environment:
-    GITHUB_INTEGRATION_ID: ${env:GITHUB_INTEGRATION_ID}
+    GITHUB_APP_ID: ${env:GITHUB_APP_ID}
     GITHUB_PRIVATE_KEY: ${env:GITHUB_PRIVATE_KEY}
     GITHUB_WEBHOOK_SECRET: ${env:GITHUB_WEBHOOK_SECRET}
 

@@ -13,7 +13,7 @@ import (
 var b *bot.GithubApp
 
 func init() {
-	integrationId, err := strconv.Atoi(os.Getenv("GITHUB_INTEGRATION_ID"))
+	appId, err := strconv.Atoi(os.Getenv("GITHUB_APP_ID"))
 	if err != nil {
 		panic(err)
 	}
@@ -21,7 +21,7 @@ func init() {
 	webhookSecret := []byte(os.Getenv("GITHUB_WEBHOOK_SECRET"))
 	privateKey := []byte(strings.Replace(os.Getenv("GITHUB_PRIVATE_KEY"), "*", "\n", -1))
 
-	b = bot.New(integrationId, webhookSecret, privateKey)
+	b = bot.New(int64(appId), webhookSecret, privateKey)
 }
 
 func main() {

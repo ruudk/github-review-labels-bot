@@ -17,23 +17,23 @@ const LabelReadyToMerge = "ready to merge"
 type GithubApp struct {
 	client        *github.Client
 	webhookSecret []byte
-	integrationId int
+	appId         int64
 	privateKey    []byte
 }
 
-func New(integrationId int, webhookSecret []byte, privateKey []byte) *GithubApp {
+func New(appId int64, webhookSecret []byte, privateKey []byte) *GithubApp {
 	return &GithubApp{
 		client:        github.NewClient(nil),
 		webhookSecret: webhookSecret,
-		integrationId: integrationId,
+		appId:         appId,
 		privateKey:    privateKey,
 	}
 }
 
-func (s *GithubApp) getClientForInstallation(installationId int) (*github.Client, error) {
+func (s *GithubApp) getClientForInstallation(installationId int64) (*github.Client, error) {
 	itr, err := ghinstallation.New(
 		http.DefaultTransport,
-		s.integrationId,
+		s.appId,
 		installationId,
 		s.privateKey,
 	)
@@ -45,7 +45,7 @@ func (s *GithubApp) getClientForInstallation(installationId int) (*github.Client
 }
 
 func (s *GithubApp) setupLabelsForAllRepositories(event *github.InstallationEvent) {
-	ghi, err := s.getClientForInstallation(int(*event.Installation.ID))
+	ghi, err := s.getClientForInstallation(*event.Installation.ID)
 	if err != nil {
 		fmt.Printf("Cannot get client for installation %d\n", *event.Installation.ID)
 
@@ -70,7 +70,7 @@ func (s *GithubApp) setupLabelsForAllRepositories(event *github.InstallationEven
 				continue
 			}
 
-			err := s.createLabels(int(*event.Installation.ID), *event.Installation.Account.Login, *r.Name)
+			err := s.createLabels(*event.Installation.ID, *event.Installation.Account.Login, *r.Name)
 			if err != nil {
 				fmt.Printf("Could not create labels for repository %s: %s\n", *r.URL, err)
 
@@ -87,7 +87,7 @@ func (s *GithubApp) setupLabelsForAllRepositories(event *github.InstallationEven
 }
 
 func (s *GithubApp) handlePullRequestCreated(event *github.PullRequestEvent) error {
-	ghi, err := s.getClientForInstallation(int(*event.Installation.ID))
+	ghi, err := s.getClientForInstallation(*event.Installation.ID)
 	if err != nil {
 		return err
 	}
@@ -116,7 +116,7 @@ func (s *GithubApp) handlePullRequestCreated(event *github.PullRequestEvent) err
 }
 
 func (s *GithubApp) handlePullRequestReadyForReview(event *github.PullRequestEvent) error {
-	ghi, err := s.getClientForInstallation(int(*event.Installation.ID))
+	ghi, err := s.getClientForInstallation(*event.Installation.ID)
 	if err != nil {
 		return err
 	}
@@ -147,7 +147,7 @@ func (s *GithubApp) handlePullRequestReadyForReview(event *github.PullRequestEve
 	return nil
 }
 
-func (s *GithubApp) handlePullRequestReviewed(installationId int, org, repo string, number int, url string) error {
+func (s *GithubApp) handlePullRequestReviewed(installationId int64, org, repo string, number int, url string) error {
 	ghi, err := s.getClientForInstallation(installationId)
 	if err != nil {
 		return err
@@ -255,7 +255,7 @@ func (s *GithubApp) handlePullRequestReviewed(installationId int, org, repo stri
 }
 
 func (s *GithubApp) handleRepositoryCreatedEvent(event *github.RepositoryEvent) error {
-	err := s.createLabels(int(*event.Installation.ID), *event.Org.Login, *event.Repo.Name)
+	err := s.createLabels(*event.Installation.ID, *event.Org.Login, *event.Repo.Name)
 	if err != nil {
 		return err
 	}
@@ -263,7 +263,7 @@ func (s *GithubApp) handleRepositoryCreatedEvent(event *github.RepositoryEvent) 
 	return nil
 }
 
-func (s *GithubApp) createLabels(installationId int, owner, repo string) error {
+func (s *GithubApp) createLabels(installationId int64, owner, repo string) error {
 	ghi, err := s.getClientForInstallation(installationId)
 	if err != nil {
 		return err
@@ -359,7 +359,7 @@ func (s *GithubApp) HandlerFunc(w http.ResponseWriter, r *http.Request) {
 	case *github.PullRequestReviewEvent:
 		if *event.Review.State == "approved" && *event.Action == "submitted" {
 			s.handlePullRequestReviewed(
-				int(*event.Installation.ID),
+				*event.Installation.ID,
 				*event.Organization.Login,
 				*event.Repo.Name,
 				*event.PullRequest.Number,
