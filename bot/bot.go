@@ -147,7 +147,7 @@ func (s *GithubApp) handlePullRequestReadyForReview(event *github.PullRequestEve
 	return nil
 }
 
-func (s *GithubApp) handlePullRequestReviewed(installationId int64, org, repo string, number int, url string) error {
+func (s *GithubApp) handlePullRequestReviewedOrDismissed(installationId int64, org, repo string, number int, url string) error {
 	ghi, err := s.getClientForInstallation(installationId)
 	if err != nil {
 		return err
@@ -358,7 +358,15 @@ func (s *GithubApp) HandlerFunc(w http.ResponseWriter, r *http.Request) {
 		}
 	case *github.PullRequestReviewEvent:
 		if *event.Review.State == "approved" && *event.Action == "submitted" {
-			s.handlePullRequestReviewed(
+			s.handlePullRequestReviewedOrDismissed(
+				*event.Installation.ID,
+				*event.Organization.Login,
+				*event.Repo.Name,
+				*event.PullRequest.Number,
+				*event.PullRequest.URL,
+			)
+		} else if *event.Review.State == "dismissed" && *event.Action == "dismissed" {
+			s.handlePullRequestReviewedOrDismissed(
 				*event.Installation.ID,
 				*event.Organization.Login,
 				*event.Repo.Name,
