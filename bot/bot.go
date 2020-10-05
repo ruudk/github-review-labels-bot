@@ -176,6 +176,18 @@ func (s *GithubApp) handlePullRequestReviewedOrDismissed(installationId int64, o
 			org,
 			repo,
 			number,
+			[]string{LabelReadyForReview},
+		)
+		if err != nil {
+			fmt.Printf("Could not add label %s to PR %s\n", LabelReadyForReview, url)
+			return err
+		}
+
+		_, _, err = ghi.Issues.AddLabelsToIssue(
+			context.Background(),
+			org,
+			repo,
+			number,
 			[]string{LabelFirstApproval},
 		)
 		if err != nil {
